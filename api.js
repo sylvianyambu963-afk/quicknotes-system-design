@@ -50,8 +50,17 @@ function renderNotes() {
         const body = document.createElement("p");
         body.textContent = note.body;
 
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.className = "delete-btn";
+
+        deleteBtn.addEventListener("click", () => {
+            deleteNote(note.id, deleteBtn);
+        });
+
         item.appendChild(title);
         item.appendChild(body);
+        item.appendChild(deleteBtn);
 
         notesList.appendChild(item);
     });
@@ -134,6 +143,30 @@ async function createNote(event) {
         );
     } finally {
         submitBtn.disabled = false;
+    }
+}
+
+async function deleteNote(noteId, deleteBtn) {
+    deleteBtn.disabled = true;
+    setStatus("Deleting note...");
+
+    try {
+        // JSONPlaceholder does not permanently save creates or deletes, so the UI updates local state after a successful request.
+        await request(`${API_URL}/${noteId}`, {
+            method: "DELETE"
+        });
+
+        notes = notes.filter((note) => note.id !== noteId);
+        renderNotes();
+
+        setStatus("Note deleted successfully.", "success");
+    } catch (error) {
+        deleteBtn.disabled = false;
+
+        setStatus(
+            "Sorry, we could not delete the note. Please try again.",
+            "error"
+        );
     }
 }
 
