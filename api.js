@@ -84,6 +84,60 @@ async function loadNotes() {
     }
 }
 
+async function createNote(event) {
+    event.preventDefault();
+
+    const title = titleInput.value.trim();
+    const body = bodyInput.value.trim();
+
+    if (!title) {
+        setStatus("Please enter a title.", "error");
+        titleInput.focus();
+        return;
+    }
+
+    if (title.length > 100) {
+        setStatus("Title must be 100 characters or fewer.", "error");
+        titleInput.focus();
+        return;
+    }
+
+    submitBtn.disabled = true;
+    setStatus("Creating note...");
+
+    try {
+        const newNote = await request(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                title: title,
+                body: body,
+                userId: 1
+            })
+        });
+
+        notes.unshift(newNote);
+        renderNotes();
+
+        setStatus(
+            `Note created (status 201, id ${newNote.id}).`,
+            "success"
+        );
+
+        noteForm.reset();
+    } catch (error) {
+        setStatus(
+            "Sorry, we could not create the note. Please try again.",
+            "error"
+        );
+    } finally {
+        submitBtn.disabled = false;
+    }
+}
+
 loadBtn.addEventListener("click", loadNotes);
+noteForm.addEventListener("submit", createNote);
 
 renderNotes();
